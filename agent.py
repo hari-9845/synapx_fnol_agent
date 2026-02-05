@@ -1,3 +1,22 @@
+def route_claim(fields, missing_fields):
+    desc = (fields.get("incidentDescription") or "").lower()
+    damage = fields.get("estimatedDamage")
+    claim_type = (fields.get("claimType") or "").lower()
+
+    if missing_fields:
+        return "Manual Review", "Missing mandatory fields"
+
+    if any(word in desc for word in ["fraud", "staged", "inconsistent"]):
+        return "Investigation Flag", "Suspicious keywords found"
+
+    if claim_type == "injury":
+        return "Specialist Queue", "Injury claim requires specialist"
+
+    if damage and damage < 25000:
+        return "Fast-track", "Low estimated damage"
+
+    return "Manual Review", "Default routing"
+
 from extractor.pdf_reader import extract_text_from_pdf
 from extractor.field_extractor import extract_fields
 from validator.field_validator import find_missing_fields
